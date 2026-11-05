@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Booking } from "@/lib/types/booking";
+import type { Booking, BookingStudio  } from "@/lib/types/booking";
 // import { getTokenFromClient } from "@/lib/getTokenFromClient";
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}/;
@@ -28,7 +28,13 @@ function formatDate(value?: string) {
   });
 }
 
-export default function BookingItemCard({ booking }: { booking: Booking }) {
+export default function BookingItemCard({
+  booking,
+  studio,
+}: {
+  booking: Booking;
+  studio?: BookingStudio;
+}) {
   const [cancelling] = useState(false);
 
   const status = booking.status ?? "Confirmed";
@@ -61,12 +67,12 @@ export default function BookingItemCard({ booking }: { booking: Booking }) {
       <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:gap-5 sm:p-5">
         {/* Image */}
         <div className="relative aspect-16/10 w-full shrink-0 overflow-hidden rounded-lg bg-[#EDFCFF] sm:aspect-4/3 sm:w-56">
-          {booking.imageUrl ? (
+          {studio?.image ? (
             // API may serve arbitrary hosts; next/image would reject unconfigured ones.
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={booking.imageUrl}
-              alt={booking.destinationName ?? "Booking"}
+              src={studio.image}
+              alt={booking.studioName ?? "Studio"}
               loading="lazy"
               className="absolute inset-0 h-full w-full object-cover"
             />
@@ -92,13 +98,13 @@ export default function BookingItemCard({ booking }: { booking: Booking }) {
           </Badge>
 
           <h3 className="mt-2 truncate text-xl font-semibold text-[#0C0B0B] sm:text-2xl">
-            {booking.destinationName}
+            {booking.studioName}
           </h3>
 
           <div className="mt-2 space-y-1.5 text-sm text-[#6C696D]">
             <p className="flex items-center gap-2">
               <CalendarDays className="h-4 w-4 shrink-0" />
-              Departure: {formatDate(booking.departureDate)}
+              Departure: {formatDate(booking.bookingDate)}
             </p>
             <p className="flex items-center gap-2">
               <Hash className="h-4 w-4 shrink-0" />
@@ -109,7 +115,7 @@ export default function BookingItemCard({ booking }: { booking: Booking }) {
           {/* Price + actions */}
           <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-4">
             <p className="text-2xl font-bold text-[#15A1BF]">
-              ${booking.price || "0"}
+              ${booking.amount ?? 0}
             </p>
 
             <div className="flex items-center gap-3">
