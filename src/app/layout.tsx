@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { Toaster } from "react-hot-toast";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -49,6 +51,24 @@ export default function RootLayout({children,}: {children: React.ReactNode;}) {
           </main>
           <Footer />
           <ThemeToggle />
+          <TooltipProvider>
+            <Toaster
+              position="bottom-right"
+              reverseOrder={false}
+              gutter={10}
+              toastOptions={{
+                duration: 3000,
+                style: {
+                  background: "#2B0A1A",
+                  color: "#FFFBFA",
+                  border: "1px solid #AA5E7A",
+                  borderRadius: "12px",
+                  padding: "14px 18px",
+                  fontSize: "14px"
+                }
+              }}
+            />
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>
