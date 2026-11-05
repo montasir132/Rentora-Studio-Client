@@ -1,6 +1,7 @@
 import HeroSection from "@/components/banner";
 import { CategoriesSection } from "@/components/categories-section";
 import { BookingSteps } from "@/components/booking-steps";
+import { HostGuarantee } from "@/components/host-guarantee";
 
 export default function Home() {
   return (
@@ -8,7 +9,7 @@ export default function Home() {
       <HeroSection />
       <CategoriesSection />
       <BookingSteps />
-
+      <HostGuarantee />
     </div>
   );
 }
