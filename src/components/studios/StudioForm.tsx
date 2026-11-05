@@ -33,6 +33,7 @@ import { useSession } from "@/lib/auth-client";
 import { isValidHttpUrl } from "@/lib/auth-utils";
 import { studioCategories } from "@/lib/nav";
 import { cn } from "@/lib/utils";
+import { getTokenFromClient } from "@/lib/getTokenFromClient";
 
 export type StudioValues = {
   title: string;
@@ -76,7 +77,7 @@ const categoryLabels: Record<string, string> = Object.fromEntries(
 );
 
 const STUDIOS_API = process.env.NEXT_PUBLIC_ADD_STUDIO_API_URL;
-// Update endpoint implemented by the backend as `PATCH /StudioDataEdit/:id`.
+
 const STUDIOS_EDIT_API = process.env.NEXT_PUBLIC_STUDIO_EDIT_API_URL;
 
 export function StudioForm({ mode, studioId, initial }: StudioFormProps) {
@@ -210,13 +211,16 @@ export function StudioForm({ mode, studioId, initial }: StudioFormProps) {
       mode === "create" ? "Creating your studio…" : "Saving your changes…"
     );
     setPending(true);
+    const token = await getTokenFromClient();
     try {
       const response = await fetch(
         mode === "create" ? STUDIOS_API : `${STUDIOS_EDIT_API}/${studioId}`,
         {
           method: mode === "create" ? "POST" : "PATCH",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json" ,
+          authorization: `Bearer ${token}`,
+        },
           body: JSON.stringify({
             title: values.title.trim(),
             category: values.category,

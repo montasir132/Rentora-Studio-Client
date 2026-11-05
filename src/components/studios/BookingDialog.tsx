@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useSession } from "@/lib/auth-client";
+import { getTokenFromClient } from "@/lib/getTokenFromClient";
 
 type BookingDialogProps = {
   studioId: string;
@@ -49,14 +50,6 @@ function decimalHours(start: string, end: string): number | null {
   if (![sh, sm, eh, em].every((n) => Number.isFinite(n))) return null;
   return eh + em / 60 - (sh + sm / 60);
 }
-
-/**
- * Booking interface for a studio. Validates the requested session, shows a
- * live price summary built from the studio's real hourly rate, deposit and
- * capacity, then submits the request to the project's existing booking API
- * (`NEXT_PUBLIC_BOOKING_API_URL` → POST /booking). Success and error toasts
- * only appear after the API actually responds.
- */
 export default function BookingDialog({
   studioId,
   studioTitle,
@@ -138,11 +131,14 @@ export default function BookingDialog({
 
     setPending(true);
     const loadingId = toast.loading("Sending your booking request…");
+    const token = await getTokenFromClient();
     try {
       // Existing booking API: POST NEXT_PUBLIC_BOOKING_API_URL (/booking).
       const res = await fetch(bookingApi, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" ,
+          authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           studioId,
           studioName: studioTitle,

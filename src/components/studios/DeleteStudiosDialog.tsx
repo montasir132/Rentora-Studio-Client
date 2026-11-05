@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "cn";
+import { getTokenFromClient } from "@/lib/getTokenFromClient";
 
 type DeleteStudiosDialogProps = {
   id: string;
@@ -25,13 +26,7 @@ type DeleteStudiosDialogProps = {
   className?: string;
 };
 
-/**
- * Custom confirmation dialog for deleting a studio listing.
- * Preserves the project's existing DELETE API call
- * (`NEXT_PUBLIC_STUDIO_DELETE_API_URL/:id`) — success only fires after the
- * API actually responds OK, duplicate submissions are blocked, and no
- * browser confirm()/alert() is used.
- */
+
 export default function DeleteStudiosDialog({
   id,
   onDeleted,
@@ -41,16 +36,22 @@ export default function DeleteStudiosDialog({
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
 
+  
   const handleDelete = async () => {
     if (pending) return; // prevent duplicate delete submissions
     setPending(true);
     const loadingId = toast.loading("Deleting studio…");
-
+    
+    const token = await getTokenFromClient();
+    
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_STUDIO_DELETE_API_URL}/${id}`,
         {
           method: "DELETE",
+          headers: { "Content-Type": "application/json" ,
+          authorization: `Bearer ${token}`,
+        },
         }
       );
 

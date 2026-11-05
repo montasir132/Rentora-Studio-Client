@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { headers } from "next/headers";
 import { Compass } from "lucide-react";
 
 import BookingExplorer from "@/components/booking/BookingExplorer";
@@ -19,6 +18,7 @@ import { studioCategories } from "@/lib/nav";
 import { requireSessionUser } from "@/lib/session";
 import { fetchStudios } from "@/lib/studios-api";
 import type { Booking, BookingStudio } from "@/lib/types/booking";
+import { getTokenFromServer } from "@/lib/getTokenFromServer";
 
 // Always render on request: bookings are per-user and come live from the API.
 export const dynamic = "force-dynamic";
@@ -29,15 +29,9 @@ export const metadata: Metadata = {
     "Track your studio reservations, manage booking requests, and keep your creative sessions organized.",
 };
 
-/**
- * Existing bookings list API — preserved exactly: same environment variable
- * (NEXT_PUBLIC_BOOKING_EDIT_API_URL → GET /my-Bookings/:email), same path,
- * same `Authorization: Bearer` header the original WIP sent (now carrying
- * the real session token when one exists).
- */
+
 async function getBookings(
   email: string,
-  token?: string
 ): Promise<{ bookings: Booking[]; failed: boolean }> {
   const bookingsApi = process.env.NEXT_PUBLIC_BOOKING_EDIT_API_URL;
   if (!bookingsApi) {
@@ -45,13 +39,14 @@ async function getBookings(
     return { bookings: [], failed: true };
   }
 
-  const requestHeaders: Record<string, string> = {};
-  if (token) requestHeaders.authorization = `Bearer ${token}`;
+  const token = await getTokenFromServer();
 
   try {
     const res = await fetch(`${bookingsApi}/${encodeURIComponent(email)}`, {
       cache: "no-store",
-      headers: requestHeaders,
+      headers: {
+        authorization: `Bearer ${token}`,
+      },
     });
     if (!res.ok) {
       console.error(`Bookings api failed: ${res.status}`);
@@ -76,13 +71,9 @@ async function getBookings(
 export default async function MyBookingsPage() {
   const user = await requireSessionUser("/my-bookings");
 
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-  const token = session?.session?.token;
 
   const [{ bookings, failed }, { studios }] = await Promise.all([
-    getBookings(user.email, token),
+    getBookings(user.email),
     fetchStudios(),
   ]);
 
