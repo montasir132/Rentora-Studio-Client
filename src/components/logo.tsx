@@ -1,7 +1,6 @@
 import { Aperture } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** Rentora Studio wordmark + aperture mark. Presentational only — wrap in a Link where it should navigate. */
 export function Logo({ className }: { className?: string }) {
   return (
     <span className={cn("flex items-center gap-2.5", className)}>
