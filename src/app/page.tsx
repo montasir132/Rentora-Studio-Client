@@ -1,9 +1,13 @@
 import HeroSection from "@/components/banner";
+import { CategoriesSection } from "@/components/categories-section";
+
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <HeroSection/>
+    <div className="flex flex-1 flex-col bg-background font-sans">
+      <HeroSection />
+      <CategoriesSection />
+
     </div>
   );
 }
