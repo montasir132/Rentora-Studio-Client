@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Logo } from "@/components/logo";
-import { NewsletterForm } from "@/components/newsletter-form";
+import { NewsletterForm } from "@/components/home/newsletter-form";
 import {
   XIcon,
   YoutubeIcon,

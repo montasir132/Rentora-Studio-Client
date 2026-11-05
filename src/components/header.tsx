@@ -3,23 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, LayoutDashboard, Plus, Building2, CalendarCheck, LogOut, Menu } from "lucide-react";
+import { Loader2, LogOut, Menu } from "lucide-react";
 
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Sheet,
   SheetContent,
@@ -27,24 +15,15 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  UserDropdown,
+  filterProfileMenuItems,
+  hasHostPermission,
+} from "@/components/auth/user-dropdown";
+import { useLogout } from "@/components/auth/logout-button";
+import { useSession } from "@/lib/auth-client";
 import { navLinks, isActivePath } from "@/lib/nav";
 import { cn } from "@/lib/utils";
-
-/** Demo identity so both header states can be previewed without a backend. */
-const demoUser = {
-  name: "Alex Carter",
-  email: "alex@rentora.studio",
-  avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=96&q=80",
-};
-
-type User = typeof demoUser | null;
-
-const userMenuItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/studios/new", label: "Add New Studio", icon: Plus },
-  { href: "/dashboard/listings", label: "My Studio Listings", icon: Building2 },
-  { href: "/dashboard/bookings", label: "My Bookings", icon: CalendarCheck },
-];
 
 function navItemClass(active: boolean) {
   return cn(
@@ -57,9 +36,16 @@ function navItemClass(active: boolean) {
 
 export function Header() {
   const pathname = usePathname();
-  // Starts signed out (matches the sample navbar); Login/Register flip the demo user on.
-  const [user, setUser] = useState<User>(null);
+  // Real Better Auth session (HTTPOnly cookie). Sign-in/up/out anywhere in
+  // the app flips this immediately — no manual refresh needed.
+  const { data: session } = useSession();
+  const user = session?.user ?? null;
+
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { logout, pending } = useLogout();
+
+  const isHost = hasHostPermission(user);
+  const mobileMenuItems = filterProfileMenuItems(isHost);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
@@ -88,68 +74,19 @@ export function Header() {
         {/* Desktop actions */}
         <div className="hidden items-center gap-2 md:flex">
           {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-2 rounded-full border border-border py-1 pl-1 pr-2.5 outline-none transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50">
-                <Avatar size="sm">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback>
-                    {user.name
-                      .split(" ")
-                      .map((part) => part[0])
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="max-w-28 truncate text-sm font-medium">
-                  {user.name}
-                </span>
-                <ChevronDown aria-hidden className="size-3.5 text-muted-foreground" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" sideOffset={8} className="w-56">
-                <DropdownMenuLabel className="text-xs">
-                  <span className="block truncate font-medium text-foreground">
-                    {user.name}
-                  </span>
-                  <span className="block truncate font-normal">
-                    {user.email}
-                  </span>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {userMenuItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <DropdownMenuItem
-                      key={item.href}
-                      render={<Link href={item.href} />}
-                      className="gap-2"
-                    >
-                      <Icon aria-hidden className="size-4 text-muted-foreground" />
-                      {item.label}
-                    </DropdownMenuItem>
-                  );
-                })}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  variant="destructive"
-                  onClick={() => setUser(null)}
-                  className="gap-2"
-                >
-                  <LogOut aria-hidden className="size-4" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <UserDropdown />
           ) : (
             <>
               <Button
                 variant="ghost"
                 className="rounded-full px-4"
-                onClick={() => setUser(demoUser)}
+                render={<Link href="/login" />}
               >
                 Login
               </Button>
               <Button
                 className="rounded-full px-4"
-                onClick={() => setUser(demoUser)}
+                render={<Link href="/register" />}
               >
                 Register
               </Button>
@@ -199,7 +136,9 @@ export function Header() {
                 <>
                   <div className="flex items-center gap-3 px-3">
                     <Avatar size="sm">
-                      <AvatarImage src={user.avatar} alt={user.name} />
+                      {user.image ? (
+                        <AvatarImage src={user.image} alt={user.name} />
+                      ) : null}
                       <AvatarFallback>
                         {user.name
                           .split(" ")
@@ -214,30 +153,46 @@ export function Header() {
                       </p>
                     </div>
                   </div>
-                  {userMenuItems.map((item) => {
+                  {mobileMenuItems.map((item) => {
                     const Icon = item.icon;
+                    const active = isActivePath(pathname, item.href);
                     return (
                       <Link
                         key={item.href}
                         href={item.href}
                         onClick={() => setMobileOpen(false)}
-                        className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+                        aria-current={active ? "page" : undefined}
+                        className={cn(
+                          "flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted",
+                          active ? "bg-muted text-primary" : "text-foreground"
+                        )}
                       >
-                        <Icon aria-hidden className="size-4 text-muted-foreground" />
+                        <Icon
+                          aria-hidden
+                          className={cn(
+                            "size-4 text-muted-foreground",
+                            active && "text-primary"
+                          )}
+                        />
                         {item.label}
                       </Link>
                     );
                   })}
                   <Button
                     variant="ghost"
-                    className="justify-start gap-2 px-3 text-destructive hover:text-destructive"
                     onClick={() => {
-                      setUser(null);
                       setMobileOpen(false);
+                      void logout();
                     }}
+                    disabled={pending}
+                    className="justify-start gap-2 px-3 text-destructive hover:text-destructive"
                   >
-                    <LogOut aria-hidden className="size-4" />
-                    Logout
+                    {pending ? (
+                      <Loader2 aria-hidden className="size-4 animate-spin" />
+                    ) : (
+                      <LogOut aria-hidden className="size-4" />
+                    )}
+                    {pending ? "Signing out…" : "Logout"}
                   </Button>
                 </>
               ) : (
@@ -245,13 +200,15 @@ export function Header() {
                   <Button
                     variant="outline"
                     className="rounded-full"
-                    onClick={() => setUser(demoUser)}
+                    render={<Link href="/login" />}
+                    onClick={() => setMobileOpen(false)}
                   >
                     Login
                   </Button>
                   <Button
                     className="rounded-full"
-                    onClick={() => setUser(demoUser)}
+                    render={<Link href="/register" />}
+                    onClick={() => setMobileOpen(false)}
                   >
                     Register
                   </Button>
