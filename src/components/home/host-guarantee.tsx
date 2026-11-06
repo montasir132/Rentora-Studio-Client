@@ -59,7 +59,7 @@ export function HostGuarantee() {
               Every session on Rentora Studio is protected by four promises.
             </p>
             <Link
-              href="/how-it-works"
+              href="/#how-it-works"
               className="group mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-primary transition-colors hover:text-primary/80 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
             >
               Learn how booking works
