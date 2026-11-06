@@ -8,8 +8,8 @@ export default function Home() {
   return (
     <div className="flex flex-1 flex-col bg-background font-sans">
       <HeroSection />
-      <CategoriesSection />
       <FeaturedStudios />
+      <CategoriesSection />
       <BookingSteps />
       <HostGuarantee />
     </div>
